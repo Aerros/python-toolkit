@@ -4,6 +4,7 @@ Reusable Python building blocks and practice projects.
 
 ## snippets/
 - `log_setup.py` — rotating file + console logging for unattended scripts
+- `credentials.py` — read secrets from environment variables
 
 ## projects/
 (coming)
