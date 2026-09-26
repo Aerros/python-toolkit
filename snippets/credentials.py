@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Read credentials from environment variables instead of clear-text hardcoding in script through Python.
 Output: Returns the named values in the order requested; raises if any are missing.
 Personal Variables: None! Instead, pass the names in when you call the function.

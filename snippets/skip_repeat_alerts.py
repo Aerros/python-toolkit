@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Remember what you last alerted about, so a daily job doesn't send the same alert every day until it's fixed.
 Output: already_alerted() returns True/False; mark_alerted() records the key. State lives in a small JSON file.
 Personal Variables: Find "#!REPLACE" comments to locate.
@@ -12,7 +12,8 @@ Implementation:
 Behavior:
     One JSON file can hold keys for several alerts: {"deposit-gap": "2026-09-22", "hl7-late": "..."}.
     The part before the first ":" is the alert name; each alert remembers only its latest value.
-    A missing or corrupt state file counts as "never alerted" - worst case you get one extra email, never zero.
+    A missing, unreadable or corrupt state file counts as "never alerted" - worst case you get one extra
+    email, never zero. (Writing the file still raises if the folder isn't writable - that's a setup problem.)
     The file is written atomically, so a crash mid-write can't corrupt it.
 Why a JSON file instead of an Excel file?
     The original used pandas + openpyxl to store one date. JSON needs no packages, and it can't be left
@@ -28,9 +29,10 @@ STATE_FILE = Path(r"C:\path\to\alert_state.json")                               
 
 def _load() -> dict:
     try:
-        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
+        state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):                                               # missing, unreadable, not UTF-8, not JSON
         return {}                                                               # no memory yet = never alerted
+    return state if isinstance(state, dict) else {}                             # valid JSON but the wrong shape = no memory
 
 
 def already_alerted(key: str) -> bool:
@@ -47,5 +49,5 @@ def mark_alerted(key: str) -> None:
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     tmp = STATE_FILE.with_name(STATE_FILE.name + ".partial")
     tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
-    tmp.replace(STATE_FILE)                                                     # all-or-nothing, see atomic_write.py
+    tmp.replace(STATE_FILE)                                                     # all-or-nothing, see write_file_safely.py
     logging.info("Recorded alert: %s", key)

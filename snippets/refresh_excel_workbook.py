@@ -1,12 +1,12 @@
-""" README
+r""" README
 Purpose: Open an Excel workbook invisibly, refresh every query/connection, save, and close - with no EXCEL.EXE left behind.
 Output: Returns nothing. Raises if the refresh or save fails, so the caller decides whether to email.
 Personal Variables: None. Pass the path in.
 Implementation:
     Paste this block into your script.
-        refresh_workbook(Path(r"\\\\server\\share\\Reports\\HL7 Report.xlsx"))
+        refresh_excel_workbook(Path(r"\\server\share\Reports\HL7 Report.xlsx"))
     Typical flow:
-        refresh_workbook(REPORT)
+        refresh_excel_workbook(REPORT)
         send_email(EMAIL_TO, "Daily HL7 Report", BODY, html=True, attachments=[REPORT])
 Behavior:
     DispatchEx starts a NEW, private Excel. Plain Dispatch attaches to the Excel you already have open,
@@ -26,7 +26,7 @@ from pathlib import Path
 import win32com.client as win32
 
 
-def refresh_workbook(path: Path) -> None:
+def refresh_excel_workbook(path: Path) -> None:
     """Refresh all data connections in an .xlsx and save it."""
     path = Path(path).resolve()                                                 # COM needs a full path
     if not path.exists():
@@ -45,6 +45,8 @@ def refresh_workbook(path: Path) -> None:
         workbook.Save()
         logging.info("Refreshed and saved %s", path.name)
     finally:
-        if workbook is not None:
-            workbook.Close(SaveChanges=False)                                   # already saved above
-        excel.Quit()                                                            # no zombie EXCEL.EXE in Task Manager
+        try:
+            if workbook is not None:
+                workbook.Close(SaveChanges=False)                               # already saved above
+        finally:
+            excel.Quit()                                                        # runs even if Close fails: no zombie EXCEL.EXE

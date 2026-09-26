@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Send email through the Outlook desktop app on this machine - with or without attachments, plain or HTML.
 Output: Returns True if Outlook accepted the message, False if it failed. Never raises, so a failed alert can't crash the job.
 Personal Variables: Find "#!REPLACE" comments to locate.

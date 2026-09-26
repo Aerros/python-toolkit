@@ -1,12 +1,12 @@
-""" README
+r""" README
 Purpose: Retry a call that fails for a known, temporary reason (SQL deadlock, Excel "Call was rejected by callee", a locked file).
 Output: Returns whatever the call returns. Re-raises the error if it is not a retryable one, or if every attempt fails.
 Personal Variables: None. Pass the error text to watch for when you call it.
 Implementation:
-    Wrap the call in a lambda so it is not run until retry() is ready:
-        retry(lambda: df.to_sql("LSA Rates", engine, if_exists="replace", index=False),
+    Wrap the call in a lambda so it is not run until retry_on_error() is ready:
+        retry_on_error(lambda: df.to_sql("LSA Rates", engine, if_exists="replace", index=False),
               retry_if="deadlock")
-        wb = retry(lambda: excel.Workbooks.Open(path),
+        wb = retry_on_error(lambda: excel.Workbooks.Open(path),
                    retry_if="call was rejected by callee", attempts=600, delay=0.1)
 Behavior:
     retry_if is matched case-insensitively against the error message.
@@ -23,7 +23,7 @@ from typing import Callable, TypeVar
 T = TypeVar("T")                                                                # "whatever type the call returns"
 
 
-def retry(
+def retry_on_error(
     call: Callable[[], T],
     retry_if: str,
     attempts: int = 5,

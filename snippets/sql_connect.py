@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: One place to build SQL Server connections (Windows Authentication), for both pyodbc and SQLAlchemy.
 Output: connect() gives a pyodbc connection that closes itself; make_engine() gives a SQLAlchemy engine for pandas.
 Personal Variables: Find "#!REPLACE" comments to locate.

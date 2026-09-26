@@ -1,10 +1,10 @@
-""" README
+r""" README
 Purpose: Run other Python scripts one after another, wait for each, and stop the chain if one fails.
 Output: Returns True if every script exited with code 0, False as soon as one doesn't.
 Personal Variables: None. Pass the script paths in.
 Implementation:
     Paste this block into your script, near the end of main().
-        ok = run_scripts([
+        ok = run_scripts_in_order([
             PYTHON_ROOT / "XiFin Import to SQL.py",
             PYTHON_ROOT / "HL7 Monitoring.py",
         ])
@@ -58,7 +58,7 @@ def run_script(script: Path, timeout_minutes: float | None = None) -> bool:
     return True
 
 
-def run_scripts(scripts: list[Path], timeout_minutes: float | None = None) -> bool:
+def run_scripts_in_order(scripts: list[Path], timeout_minutes: float | None = None) -> bool:
     """Run scripts in order; stop at the first failure."""
     for script in scripts:
         if not run_script(script, timeout_minutes):

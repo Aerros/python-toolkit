@@ -1,11 +1,14 @@
-""" README
+r""" README
 Purpose: Write a file so it is either complete or absent - never half-written. gunzip_file() is the worked example.
-Output: atomic_write() gives you a file handle inside a with-block; gunzip_file() returns the path of the unzipped file.
+Output: write_file_safely() gives you a file handle inside a with-block; gunzip_file() returns the path of the unzipped file.
 Personal Variables: None.
 Implementation:
     Paste this block into your script.
-    Any file you produce:
-        with atomic_write(OUTPUT_DIR / "claims.txt") as f:
+    Text you produce (mode "w" - the default is "wb", which only accepts bytes):
+        with write_file_safely(OUTPUT_DIR / "claims.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+    Bytes (downloads, copies, zip output):
+        with write_file_safely(OUTPUT_DIR / "claims.bin") as f:
             f.write(data)
     Decompress every .gz in a folder:
         for gz in sorted(INPUT_DIR.glob("*.gz")):
@@ -19,6 +22,7 @@ Behavior:
     On any error the .partial file is deleted and the error is re-raised.
     An existing file at the target is replaced only on success.
     gunzip_file deletes the .gz only after the unzipped file is safely in place.
+    gunzip_file raises ValueError for a file that doesn't end in .gz, rather than guessing a name.
 """
 
 import gzip
@@ -29,7 +33,7 @@ from typing import IO, Iterator
 
 
 @contextmanager
-def atomic_write(target: Path, mode: str = "wb", **open_kwargs) -> Iterator[IO]:
+def write_file_safely(target: Path, mode: str = "wb", **open_kwargs: object) -> Iterator[IO]:
     """Open target.partial for writing; rename to target only if the block finishes."""
     target = Path(target)
     partial = target.with_name(target.name + ".partial")
@@ -45,8 +49,10 @@ def atomic_write(target: Path, mode: str = "wb", **open_kwargs) -> Iterator[IO]:
 def gunzip_file(archive: Path, remove_archive: bool = True) -> Path:
     """Decompress archive.gz to archive (no .gz). Returns the new path."""
     archive = Path(archive)
+    if archive.suffix.lower() != ".gz":
+        raise ValueError(f"Not a .gz file: {archive.name}")                     # with_suffix("") would strip .txt instead
     final = archive.with_suffix("")                                             # claims.txt.gz -> claims.txt
-    with gzip.open(archive, "rb") as source, atomic_write(final) as target:
+    with gzip.open(archive, "rb") as source, write_file_safely(final) as target:
         shutil.copyfileobj(source, target)                                      # streams in chunks; fine for multi-GB files
     if remove_archive:
         archive.unlink()

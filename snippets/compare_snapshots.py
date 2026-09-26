@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Compare two versions of the same table (yesterday's snapshot vs today's) and return what was added, removed, or changed.
 Output: Each function returns a DataFrame. Empty DataFrame = nothing to report.
 Personal Variables: None. Pass the key column(s) and the columns to watch.
@@ -26,7 +26,9 @@ Behavior:
     Keys are compared as trimmed, upper-case TEXT, so 1001 (number) matches "1001" (text) and "ab1 " matches "AB1".
     Excel round-trips often turn IDs into numbers; this is what the astype(str) lines in the originals were fixing.
     changed_rows returns columns <col>_old and <col>_new side by side, plus the key.
-    Two blanks (NaN and NaN) count as equal, not as a change.
+    Two blanks (NaN and NaN) in a WATCHED column count as equal, not as a change.
+    Rows with a blank KEY are left out of every result - a blank key can't be matched to anything.
+    Keys should be unique. If one key appears on several rows, changed_rows pairs every old copy with every new copy.
 """
 
 from datetime import date
@@ -54,12 +56,18 @@ def _norm(series: pd.Series) -> pd.Series:
     )
 
 
+BLANK_KEYS = {"", "NAN", "NONE", "<NA>", "NAT"}                                 # how an empty cell looks after _norm
+
+
 def _with_keys(df: pd.DataFrame, key: str | list[str]) -> tuple[pd.DataFrame, list[str]]:
     keys = [key] if isinstance(key, str) else list(key)                         # accept one key or a composite key
     out = df.copy()
+    blank = pd.Series(False, index=out.index)
     for k in keys:
+        blank |= out[k].isna()
         out[k] = _norm(out[k])
-    return out, keys
+        blank |= out[k].isin(BLANK_KEYS)
+    return out.loc[~blank], keys                                                # WHERE key IS NOT NULL - can't match a blank key
 
 
 def added_rows(old: pd.DataFrame, new: pd.DataFrame, key: str | list[str]) -> pd.DataFrame:
@@ -91,6 +99,7 @@ def changed_rows(
     for col in watch:
         a, b = merged[f"{col}_old"], merged[f"{col}_new"]
         both_blank = a.isna() & b.isna()                                        # NULL vs NULL is not a change
-        differs |= (a != b) & ~both_blank                                       # OR together: any watched column moved
+        not_equal = (a != b).fillna(True).astype(bool)                          # NULL vs value IS a change (Int64 gives NA here)
+        differs |= not_equal & ~both_blank                                      # OR together: any watched column moved
     ordered = keys + [c for col in watch for c in (f"{col}_old", f"{col}_new")]
     return merged.loc[differs, ordered]

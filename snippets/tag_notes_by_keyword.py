@@ -1,16 +1,16 @@
-""" README
+r""" README
 Purpose: Tag free-text notes with one or more categories using a dictionary of regex patterns, one row per match.
 Output: Returns a DataFrame: id column, Category, Matched_Text. A note matching 3 categories produces 3 rows.
 Personal Variables: Find "#!REPLACE" comments to locate.
 Implementation:
     Paste this block into your script.
-        tagged = categorize(df, id_col="Accession", text_col="Contact Info")
+        tagged = tag_notes_by_keyword(df, id_col="Accession", text_col="Contact Info")
         tagged.to_sql("note_categories", engine, if_exists="replace", index=False)
     Then in SQL:  SELECT Category, COUNT(DISTINCT Accession) FROM note_categories GROUP BY Category
 Writing patterns:
     Matching is case-insensitive; write patterns in lower case.
-    \\b     = word boundary:  r"\\bauth" matches "auth", "authorization", but not "coauthor".
-    .*?    = "anything, as little as possible":  r"\\bsent.*?medical records"
+    \b     = word boundary:  r"\bauth" matches "auth", "authorization", but not "coauthor".
+    .*?    = "anything, as little as possible":  r"\bsent.*?medical records"
     A category with several phrasings is just a list of patterns - ANY one match tags the note.
     Test patterns at https://regex101.com (Python flavor) against a few real notes before adding them.
 Behavior:
@@ -40,7 +40,7 @@ _COMPILED = {
 }
 
 
-def match_categories(note) -> list[tuple[str, str | None]]:
+def match_categories(note: object) -> list[tuple[str, str | None]]:
     """Return [(category, matched text), ...] for one note."""
     if pd.isna(note) or not str(note).strip():
         return [(BLANK_LABEL, None)]
@@ -53,7 +53,7 @@ def match_categories(note) -> list[tuple[str, str | None]]:
     return found or [(NO_MATCH_LABEL, None)]
 
 
-def categorize(df: pd.DataFrame, id_col: str, text_col: str) -> pd.DataFrame:
+def tag_notes_by_keyword(df: pd.DataFrame, id_col: str, text_col: str) -> pd.DataFrame:
     """One output row per (id, category) - like CROSS APPLY in SQL."""
     out = df[[id_col]].copy()
     out["_hits"] = df[text_col].map(match_categories)

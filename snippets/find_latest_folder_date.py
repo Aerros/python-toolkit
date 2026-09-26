@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Find the newest MMDDYYYY-named folder under a directory tree.
 Output: Returns a datetime, or None if no valid date folders were found.
 Personal Variables: Find "#!REPLACE" comments to locate.
@@ -57,6 +57,7 @@ def parse_folder_date(name: str) -> datetime | None:                            
 
 def find_latest_folder_date(root: Path) -> datetime | None:                     # root is passed in so one copy serves every script
     """Return the newest dated folder under root, or None if there are none."""
+    root = Path(root)                                                           # accept a plain string path too
     if not root.exists():                                                       # guard: no folder means nothing to search
         return None
     dates = [

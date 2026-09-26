@@ -1,4 +1,4 @@
-""" README
+r""" README
 Purpose: Find the newest file (or newest N files) in a folder that match a name pattern.
 Output: latest_file() returns a Path or None; latest_files() returns a list, newest LAST, possibly shorter than n.
 Personal Variables: None. Pass the folder and pattern in.

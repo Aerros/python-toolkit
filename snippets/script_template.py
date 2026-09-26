@@ -1,10 +1,10 @@
-""" README
+r""" README
 Purpose: The starting shape for every unattended script: logging first, one main(), one safety net, a real exit code.
-Output: Exit code 0 on success, 1 on failure - so Task Scheduler and parent scripts (run_scripts.py) can tell.
+Output: Exit code 0 on success, 1 on failure - so Task Scheduler and parent scripts (run_scripts_in_order.py) can tell.
 Personal Variables: Find "#!REPLACE" comments to locate.
 Implementation:
     Copy this file, rename it, and fill in main().
-    Paste the snippets you need (log_setup, outlook_email, sql_connect...) into the marked section,
+    Paste the snippets you need (log_setup, send_outlook_email, sql_connect...) into the marked section,
     or keep them in a snippets/ folder next to the script and import them.
 The shape, and why each piece is there:
     configure_logging() first    - anything that goes wrong after this line is recorded.
@@ -30,7 +30,7 @@ JOB_NAME = "My Scheduled Job"                                                   
 
 
 def main() -> int:
-    configure_logging()                                                         # from log_setup.py
+    log_file = configure_logging()                                              # from log_setup.py; returns the log's path
     started = datetime.now()
     logging.info("=" * 60)
     logging.info("%s started", JOB_NAME)
@@ -43,7 +43,7 @@ def main() -> int:
         return 0
     except Exception:
         logging.exception("%s failed", JOB_NAME)                                # .exception = error + full traceback
-        send_failure_alert(JOB_NAME, log_file=LOG_DIR / f"{LOG_NAME}.log")      # from outlook_email.py; never raises
+        send_failure_alert(JOB_NAME, log_file=log_file)                         # from send_outlook_email.py; never raises
         return 1
     finally:
         logging.info("%s finished in %s", JOB_NAME, datetime.now() - started)
