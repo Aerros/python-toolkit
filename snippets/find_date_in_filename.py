@@ -33,12 +33,12 @@ Consistency note:
 import re
 from datetime import datetime
 
-DATE_REGEX = r"\d{8}"                                                           #!REPLACE - the digits that make up the date
+DATE_REGEX = r"\d{8}"                                                           #!REPLACE - get 8 digits ...see https://regex101.com/r/rz08hB/1
 DATE_FORMAT = "%Y%m%d"                                                          #!REPLACE - what those digits mean
-TIME_REGEX = r"\d{4}"                                                           # optional HHMM right after the date
+TIME_REGEX = r"\d{4}"                                                           # optional- get 4 digits for HHMM right after the date
 
 _CANDIDATE = re.compile(
-    rf"(?<!\d)(?P<date>{DATE_REGEX})(?:{TIME_REGEX})?(?!\d)"                    # (?<!\d) (?!\d): not part of a longer number
+    rf"(?<!\d)(?P<date>{DATE_REGEX})(?:{TIME_REGEX})?(?!\d)"                    # (?<!\d) (?!\d): not part of a longer number...see https://regex101.com/r/ApDXvk/1
 )
 SEPARATORS = "_- "                                                              # one of these before the date is stripped too
 
